@@ -1,3 +1,33 @@
-package com.fathom.account; import com.fathom.common.ResourceNotFoundException; import com.fathom.user.AppUserRepository; import jakarta.validation.Valid; import jakarta.validation.constraints.*; import java.time.Instant; import java.util.*; import org.springframework.web.bind.annotation.*;
-@RestController public class AccountController { private final FinancialAccountRepository repo; private final AppUserRepository userRepo; public AccountController(FinancialAccountRepository r,AppUserRepository u){repo=r;userRepo=u;} record Req(@NotBlank String name,String institutionName,@NotNull AccountType accountType,String currency,String maskedIdentifier){} record Res(UUID id,UUID userId,String name,String institutionName,AccountType accountType,String currency,String maskedIdentifier,boolean active,Instant createdAt,Instant updatedAt){}
-@PostMapping("/api/users/{userId}/accounts") Res create(@PathVariable UUID userId,@Valid @RequestBody Req req){ userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("User not found")); FinancialAccount a=new FinancialAccount(); a.setUserId(userId); a.setName(req.name()); a.setInstitutionName(req.institutionName()); a.setAccountType(req.accountType()); if(req.currency()!=null) a.setCurrency(req.currency()); a.setMaskedIdentifier(req.maskedIdentifier()); a=repo.save(a); return m(a);} @GetMapping("/api/users/{userId}/accounts") List<Res> list(@PathVariable UUID userId){ return repo.findByUserId(userId).stream().map(this::m).toList(); } @GetMapping("/api/accounts/{accountId}") Res get(@PathVariable UUID accountId){ return m(repo.findById(accountId).orElseThrow(()->new ResourceNotFoundException("Account not found"))); } private Res m(FinancialAccount a){ return new Res(a.getId(),a.getUserId(),a.getName(),a.getInstitutionName(),a.getAccountType(),a.getCurrency(),a.getMaskedIdentifier(),a.isActive(),a.getCreatedAt(),a.getUpdatedAt()); }}
+package com.fathom.account;
+
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+public class AccountController {
+    private final FinancialAccountService service;
+
+    public AccountController(FinancialAccountService service) {
+        this.service = service;
+    }
+
+    @PostMapping("/api/users/{userId}/accounts")
+    AccountDtos.FinancialAccountResponse create(
+            @PathVariable UUID userId,
+            @Valid @RequestBody AccountDtos.CreateFinancialAccountRequest request
+    ) {
+        return service.create(userId, request);
+    }
+
+    @GetMapping("/api/users/{userId}/accounts")
+    List<AccountDtos.FinancialAccountResponse> list(@PathVariable UUID userId) {
+        return service.listByUser(userId);
+    }
+
+    @GetMapping("/api/accounts/{accountId}")
+    AccountDtos.FinancialAccountResponse get(@PathVariable UUID accountId) {
+        return service.get(accountId);
+    }
+}

@@ -1,5 +1,36 @@
-package com.fathom.user; import com.fathom.common.ResourceNotFoundException; import jakarta.validation.Valid; import jakarta.validation.constraints.*; import java.time.Instant; import java.util.*; import org.springframework.web.bind.annotation.*;
-@RestController @RequestMapping("/api/users") public class UserController { private final AppUserRepository repo; public UserController(AppUserRepository repo){this.repo=repo;} record CreateUserRequest(@NotBlank String name,@NotBlank @Email String email,@NotNull UserStatus status){} record UserResponse(UUID id,String name,String email,UserStatus status,Instant createdAt,Instant updatedAt){}
-@PostMapping UserResponse create(@Valid @RequestBody CreateUserRequest r){ if(repo.existsByEmail(r.email())) throw new IllegalArgumentException("Email already exists"); AppUser u=new AppUser(); u.setName(r.name()); u.setEmail(r.email()); u.setStatus(r.status()); u=repo.save(u); return new UserResponse(u.getId(),u.getName(),u.getEmail(),u.getStatus(),u.getCreatedAt(),u.getUpdatedAt()); }
-@GetMapping("/{id}") UserResponse get(@PathVariable UUID id){ AppUser u=repo.findById(id).orElseThrow(()->new ResourceNotFoundException("User not found")); return new UserResponse(u.getId(),u.getName(),u.getEmail(),u.getStatus(),u.getCreatedAt(),u.getUpdatedAt()); }
-@GetMapping List<UserResponse> list(){ return repo.findAll().stream().map(u->new UserResponse(u.getId(),u.getName(),u.getEmail(),u.getStatus(),u.getCreatedAt(),u.getUpdatedAt())).toList(); }}
+package com.fathom.user;
+
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    private final UserService service;
+
+    public UserController(UserService service) {
+        this.service = service;
+    }
+
+    @PostMapping
+    UserDtos.UserResponse create(@Valid @RequestBody UserDtos.CreateUserRequest request) {
+        return service.create(request);
+    }
+
+    @GetMapping("/{id}")
+    UserDtos.UserResponse get(@PathVariable UUID id) {
+        return service.get(id);
+    }
+
+    @GetMapping
+    List<UserDtos.UserResponse> list() {
+        return service.list();
+    }
+}
