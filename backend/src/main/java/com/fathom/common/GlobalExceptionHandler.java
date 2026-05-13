@@ -34,4 +34,11 @@ public class GlobalExceptionHandler {
                 new ApiErrorResponse(Instant.now(), 400, "Bad Request", "Validation failed", details)
         );
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<ApiErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(
+                new ApiErrorResponse(Instant.now(), 400, "Bad Request", ex.getMessage(), List.of())
+        );
+    }
 }
