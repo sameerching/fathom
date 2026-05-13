@@ -17,7 +17,9 @@ public class DashboardController {
     }
 
     @GetMapping("/api/users/{userId}/dashboard/monthly-summary")
-    DashboardDtos.MonthlySummaryResponse monthlySummary(@PathVariable UUID userId, @RequestParam(required = false) YearMonth month) {
+    DashboardDtos.MonthlySummaryResponse monthlySummary(
+            @PathVariable UUID userId,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
         return dashboardService.monthlySummary(userId, month);
     }
 
