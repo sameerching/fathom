@@ -123,7 +123,7 @@ Net worth summary:
 curl "http://localhost:8080/api/users/{userId}/dashboard/net-worth"
 ```
 
-## Phase 5: Frontend Dashboard Shell
+## Phase 6: Frontend Setup & Onboarding
 
 1. Copy frontend environment file:
 ```bash
@@ -131,21 +131,19 @@ cd frontend
 cp .env.example .env.local
 ```
 2. Run backend (`http://localhost:8080`) and frontend (`http://localhost:3000`).
-3. Paste your `userId` in the **Current User ID** selector (stored in localStorage).
+3. Open `http://localhost:3000/setup`.
+4. Create a user in **Section A** (user ID is saved to localStorage).
+5. Create an account in **Section B**.
+6. Open `/upload` and import a normalized CSV.
+7. Review `/dashboard` and `/transactions`.
 
-Sample flow:
-1. Create user:
+Optional advanced flow (API-first):
 ```bash
 curl -X POST http://localhost:8080/api/users \
   -H 'Content-Type: application/json' \
-  -d '{"name":"Alice","email":"alice@example.com","status":"ACTIVE"}'
-```
-2. Create account:
-```bash
+  -d '{"name":"Alice","email":"alice.com","status":"ACTIVE"}'
+
 curl -X POST http://localhost:8080/api/users/{userId}/accounts \
   -H 'Content-Type: application/json' \
   -d '{"name":"Primary Account","accountType":"BANK_ACCOUNT"}'
 ```
-3. Paste `userId` in frontend.
-4. Upload a normalized CSV in `/upload`.
-5. Review transactions and dashboard pages.
