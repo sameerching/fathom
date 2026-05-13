@@ -40,4 +40,32 @@ class TransactionImportControllerIntegrationTest {
         mockMvc.perform(get("/api/transaction-imports/{id}", importId)).andExpect(status().isOk()).andExpect(jsonPath("$.totalRows").value(3)).andExpect(jsonPath("$.errors[0].rowNumber").value(4));
         mockMvc.perform(get("/api/users/{u}/transaction-imports", user1)).andExpect(status().isOk());
     }
+
+    @Test
+    void unsupportedSourceReturnsBadRequest() throws Exception {
+        String user = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U4\",\"email\":\"u4@a.com\",\"status\":\"ACTIVE\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+        String account = objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/accounts", user).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"A4\",\"accountType\":\"BANK_ACCOUNT\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+        String csv = "transactionDate,direction,amount,rawDescription,transactionType\n2026-05-01,DEBIT,10.00,x,EXPENSE\n";
+        MockMultipartFile f = new MockMultipartFile("file", "required-only.csv", "text/csv", csv.getBytes());
+        mockMvc.perform(multipart("/api/users/{u}/accounts/{a}/transaction-imports", user, account).file(f).param("source", "SYSTEM"))
+                .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    void importWithRequiredHeadersOnly() throws Exception {
+        String user = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U3\",\"email\":\"u3@a.com\",\"status\":\"ACTIVE\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+        String account = objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/accounts", user).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"A3\",\"accountType\":\"BANK_ACCOUNT\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+        String csv = "transactionDate,direction,amount,rawDescription,transactionType\n2026-05-01,DEBIT,100.00,Coffee,EXPENSE\n2026-05-02,CREDIT,1000.00,Salary,INCOME\n";
+        MockMultipartFile f = new MockMultipartFile("file", "required-only.csv", "text/csv", csv.getBytes());
+        mockMvc.perform(multipart("/api/users/{u}/accounts/{a}/transaction-imports", user, account).file(f))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.createdCount").value(2))
+                .andExpect(jsonPath("$.failedCount").value(0));
+    }
+
 }

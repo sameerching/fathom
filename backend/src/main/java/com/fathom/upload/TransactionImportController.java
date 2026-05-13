@@ -14,8 +14,16 @@ public class TransactionImportController {
     @PostMapping("/api/users/{userId}/accounts/{accountId}/transaction-imports")
     TransactionImportDtos.ImportSummaryResponse upload(@PathVariable UUID userId, @PathVariable UUID accountId,
                                                        @RequestParam("file") MultipartFile file,
-                                                       @RequestParam(defaultValue = "MANUAL") TransactionSource source){
-        return service.importCsv(userId, accountId, file, source);
+                                                       @RequestParam(defaultValue = "MANUAL") String source){
+        return service.importCsv(userId, accountId, file, parseAllowedSource(source));
+    }
+
+    private TransactionSource parseAllowedSource(String source){
+        TransactionSource parsed = TransactionSource.valueOf(source.toUpperCase());
+        if (parsed != TransactionSource.MANUAL && parsed != TransactionSource.BANK_STATEMENT && parsed != TransactionSource.CREDIT_CARD_STATEMENT) {
+            throw new IllegalArgumentException("Unsupported source");
+        }
+        return parsed;
     }
 
     @GetMapping("/api/users/{userId}/transaction-imports")

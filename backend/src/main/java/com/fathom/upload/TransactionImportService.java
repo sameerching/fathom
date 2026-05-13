@@ -44,7 +44,7 @@ public class TransactionImportService {
                 String hash = hash(userId+"|"+accountId+"|"+date+"|"+direction+"|"+amount+"|"+normalize(raw));
                 if(transactionRepository.existsByUserIdAndImportHash(userId, hash)){dup++; continue;}
                 Transaction t = new Transaction(); t.setUserId(userId); t.setAccountId(accountId); t.setTransactionDate(date); t.setDirection(direction); t.setAmount(amount); t.setTransactionType(type); t.setSource(source); t.setRawDescription(raw);
-                t.setMerchant(blank(r.get("merchant"))); t.setNotes(blank(r.get("notes"))); t.setCategoryId(resolveCategoryId(userId, blank(r.get("categoryName")))); t.setImportHash(hash);
+                t.setMerchant(optional(r, "merchant")); t.setNotes(optional(r, "notes")); t.setCategoryId(resolveCategoryId(userId, optional(r, "categoryName"))); t.setImportHash(hash);
                 transactionRepository.save(t); created++;
             } catch(Exception ex){
                 failed++; TransactionImportError e = new TransactionImportError(); e.setImportId(imp.getId()); e.setRowNumber((int)r.getRecordNumber()+1); e.setMessage(ex.getMessage()==null?"Invalid row":ex.getMessage()); e.setRawRow(r.toString()); errors.add(e);
@@ -62,6 +62,7 @@ public class TransactionImportService {
 
     private void validateFile(MultipartFile file){ if(file==null||file.isEmpty()) throw new IllegalArgumentException("File must not be empty"); if(file.getSize()>maxFileSize) throw new IllegalArgumentException("File exceeds max size"); String name=file.getOriginalFilename()==null?"":file.getOriginalFilename().toLowerCase(Locale.ROOT); if(!name.endsWith(".csv")) throw new IllegalArgumentException("File must be CSV"); }
     private String req(CSVRecord r,String k){ String v=blank(r.get(k)); if(v==null) throw new IllegalArgumentException("Missing value for "+k); return v; }
+    private String optional(CSVRecord r, String k){ if(!r.isMapped(k)) return null; return blank(r.get(k)); }
     private String blank(String s){ return s==null||s.isBlank()?null:s.trim(); }
     private String normalize(String s){ return s.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+"," "); }
     private String hash(String input){ try{MessageDigest md=MessageDigest.getInstance("SHA-256"); byte[] b=md.digest(input.getBytes(StandardCharsets.UTF_8)); StringBuilder sb=new StringBuilder(); for(byte x:b) sb.append(String.format("%02x",x)); return sb.toString();}catch(Exception e){ throw new RuntimeException(e);} }
