@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 const links = [
+  ['Setup', '/setup'],
   ['Dashboard', '/dashboard'],
   ['Transactions', '/transactions'],
   ['Upload', '/upload'],
@@ -14,8 +15,10 @@ export default function HomePage() {
       <h1>Fathom</h1>
       <p>Understand your money.</p>
       <ul>
-        {links.map(([label, href]) => (
-          <li key={href}><Link href={href}>{label}</Link></li>
+        {links.map(([label, href], index) => (
+          <li key={href}>
+            <Link href={href}>{index === 0 ? `⭐ ${label}` : label}</Link>
+          </li>
         ))}
       </ul>
     </main>
