@@ -11,7 +11,7 @@ export function formatCurrency(value: number | string | null | undefined, curren
 export function formatPercent(value: number | string | null | undefined) {
   const numericValue = Number(value ?? 0);
   if (Number.isNaN(numericValue)) return '-';
-  return `${(numericValue * 100).toFixed(1)}%`;
+  return `${numericValue.toFixed(1)}%`;
 }
 
 export function formatDate(value: string | number | Date) {
