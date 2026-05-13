@@ -19,3 +19,6 @@ frontend/out/
 # IDE
 .idea/
 .vscode/
+
+!.env.example
+!frontend/.env.example
