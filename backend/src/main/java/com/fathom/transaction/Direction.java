@@ -1,1 +1,6 @@
-package com.fathom.transaction; public enum Direction { CREDIT, DEBIT }
+package com.fathom.transaction;
+
+public enum Direction {
+    CREDIT,
+    DEBIT
+}
