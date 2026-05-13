@@ -1,23 +1,10 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers: Record<string, string> = { ...(init?.headers as Record<string, string> | undefined) };
-  if (!(init?.body instanceof FormData)) headers['Content-Type'] = headers['Content-Type'] ?? 'application/json';
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
-  if (!response.ok) throw new Error((await response.text()) || `Request failed ${response.status}`);
-  return response.json() as Promise<T>;
-}
-
+async function request<T>(path: string, init?: RequestInit): Promise<T> { const headers: Record<string, string> = { ...(init?.headers as Record<string, string> | undefined) }; if (!(init?.body instanceof FormData)) headers['Content-Type'] = headers['Content-Type'] ?? 'application/json'; const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers }); if (!response.ok) throw new Error((await response.text()) || `Request failed ${response.status}`); return response.json() as Promise<T>; }
 export type User = { id: string; name: string; email: string; status: string; createdAt: string; updatedAt: string };
 export type CreateUserRequest = { name: string; email: string; status: string };
-export type CreateAccountRequest = {
-  name: string;
-  institutionName?: string;
-  accountType: string;
-  currency?: string;
-  maskedIdentifier?: string;
-};
-
+export type CreateAccountRequest = { name: string; institutionName?: string; accountType: string; currency?: string; maskedIdentifier?: string };
+export type Category = { id:string; userId:string|null; name:string; categoryType:string; systemDefault:boolean; active:boolean };
+export type CreateCategoryRequest = { name:string; categoryType:string; parentCategoryId:string|null };
 export type MonthlySummary = { income:number;expenses:number;investments:number;liabilityPayments:number;netCashFlow:number;savingsRate:number };
 export type CategoryBreakdownItem = { categoryName:string;amount:number;transactionCount:number };
 export type NetWorthSummary = { totalAssets:number;totalLiabilities:number;netWorth:number };
@@ -26,12 +13,11 @@ export type ImportSummary = { status:string;totalRows:number;createdCount:number
 export type Account = { id:string;name:string;accountType:string;institutionName?:string;currency?:string;maskedIdentifier?:string };
 export type InvestmentHolding = { id:string;assetType:string;name:string;provider:string|null;symbol:string|null;currency:string|null;investedAmount:number|null;currentValue:number|null;asOfDate:string|null };
 export type Liability = { id:string;liabilityType:string;name:string;lender:string|null;currency:string|null;principalAmount:number|null;outstandingAmount:number;interestRate:number|null;emiAmount:number|null;startDate:string|null;endDate:string|null };
-
-export const createUser = (payload: CreateUserRequest) => request<User>('/api/users', { method: 'POST', body: JSON.stringify(payload) });
-export const getUsers = () => request<User[]>('/api/users');
-export const createAccount = (userId: string, payload: CreateAccountRequest) =>
-  request<Account>(`/api/users/${userId}/accounts`, { method: 'POST', body: JSON.stringify(payload) });
-
+export const createUser = (payload: CreateUserRequest) => request<User>('/api/users', { method: 'POST', body: JSON.stringify(payload) }); export const getUsers = () => request<User[]>('/api/users'); export const createAccount = (userId: string, payload: CreateAccountRequest) => request<Account>(`/api/users/${userId}/accounts`, { method: 'POST', body: JSON.stringify(payload) });
+export const getSystemCategories = ()=>request<Category[]>('/api/categories/system');
+export const getUserCategories = (userId:string)=>request<Category[]>(`/api/users/${userId}/categories`);
+export const createCategory = (userId:string,payload:CreateCategoryRequest)=>request<Category>(`/api/users/${userId}/categories`,{method:'POST',body:JSON.stringify(payload)});
+export const updateTransactionCategory = (transactionId:string,categoryId:string|null)=>request<Transaction>(`/api/transactions/${transactionId}/category`,{method:'PATCH',body:JSON.stringify({categoryId})});
 export const getMonthlySummary = (userId:string, month:string)=>request<MonthlySummary>(`/api/users/${userId}/dashboard/monthly-summary?month=${month}`);
 export const getCategoryBreakdown = (userId:string,from:string,to:string,type:string)=>request<CategoryBreakdownItem[]>(`/api/users/${userId}/dashboard/category-breakdown?${new URLSearchParams({from,to,type})}`);
 export const getNetWorth = (userId:string)=>request<NetWorthSummary>(`/api/users/${userId}/dashboard/net-worth`);

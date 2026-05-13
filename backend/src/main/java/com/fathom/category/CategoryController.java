@@ -1,10 +1,13 @@
 package com.fathom.category;
 
-import java.time.Instant;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -16,13 +19,22 @@ public class CategoryController {
     }
 
     @GetMapping("/api/categories/system")
-    List<CategoryResponse> system() { return service.getSystem().stream().map(this::map).toList(); }
+    List<CategoryDtos.CategoryResponse> system() { return service.getSystem().stream().map(this::map).toList(); }
 
     @GetMapping("/api/users/{userId}/categories")
-    List<CategoryResponse> byUser(@PathVariable UUID userId) { return service.getByUser(userId).stream().map(this::map).toList(); }
+    List<CategoryDtos.CategoryResponse> byUser(@PathVariable UUID userId) { return service.getByUser(userId).stream().map(this::map).toList(); }
 
-    private CategoryResponse map(Category c) { return new CategoryResponse(c.getId(), c.getUserId(), c.getName(), c.getCategoryType(), c.isSystemDefault(), c.isActive(), c.getCreatedAt(), c.getUpdatedAt()); }
+    @PostMapping("/api/users/{userId}/categories")
+    CategoryDtos.CategoryResponse create(@PathVariable UUID userId, @Valid @RequestBody CategoryDtos.CreateCategoryRequest request) {
+        return map(service.createUserCategory(userId, request));
+    }
 
-    record CategoryResponse(UUID id, UUID userId, String name, CategoryType categoryType, boolean systemDefault,
-                            boolean active, Instant createdAt, Instant updatedAt) {}
+    @PatchMapping("/api/categories/{categoryId}")
+    CategoryDtos.CategoryResponse update(@PathVariable UUID categoryId, @Valid @RequestBody CategoryDtos.UpdateCategoryRequest request) {
+        return map(service.updateCategory(categoryId, request));
+    }
+
+    private CategoryDtos.CategoryResponse map(Category c) {
+        return new CategoryDtos.CategoryResponse(c.getId(), c.getUserId(), c.getName(), c.getCategoryType(), c.isSystemDefault(), c.isActive(), c.getCreatedAt(), c.getUpdatedAt());
+    }
 }
