@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: fathom-postgres
+    environment:
+      POSTGRES_DB: fathom
+      POSTGRES_USER: fathom
+      POSTGRES_PASSWORD: fathom_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - fathom_pg_data:/var/lib/postgresql/data
+
+volumes:
+  fathom_pg_data:
