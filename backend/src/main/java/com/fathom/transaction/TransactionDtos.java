@@ -26,7 +26,24 @@ public class TransactionDtos {
             String importHash
     ) {}
 
-    public record TransactionResponse(UUID id, UUID userId, UUID accountId, UUID categoryId, LocalDate transactionDate,
-                                      BigDecimal amount, Direction direction, TransactionType transactionType,
-                                      TransactionSource source, String merchant, Instant createdAt, Instant updatedAt) {}
+    public record TransactionResponse(
+            UUID id,
+            UUID userId,
+            UUID accountId,
+            UUID categoryId,
+            LocalDate transactionDate,
+            BigDecimal amount,
+            Direction direction,
+            TransactionType transactionType,
+            TransactionSource source,
+            String rawDescription,
+            String merchant,
+            String notes,
+            boolean internalTransfer,
+            boolean investmentTransfer,
+            boolean debtPayment,
+            String importHash,
+            Instant createdAt,
+            Instant updatedAt
+    ) {}
 }

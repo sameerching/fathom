@@ -21,24 +21,42 @@ class TransactionControllerIntegrationTest {
     @Autowired private ObjectMapper objectMapper;
 
     @Test
-    void createAndList() throws Exception {
-        String userResponse = mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"T\",\"email\":\"t@a.com\",\"status\":\"ACTIVE\"}"))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        String userId = objectMapper.readTree(userResponse).get("id").asText();
-
-        String accountResponse = mockMvc.perform(post("/api/users/{userId}/accounts", userId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"ICICI\",\"accountType\":\"BANK_ACCOUNT\"}"))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        JsonNode accountNode = objectMapper.readTree(accountResponse);
-        String accountId = accountNode.get("id").asText();
+    void filterByDateRange() throws Exception {
+        String userId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"T\",\"email\":\"t@a.com\",\"status\":\"ACTIVE\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+        String accountId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/accounts", userId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"ICICI\",\"accountType\":\"BANK_ACCOUNT\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
 
         mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-01\",\"amount\":100.50,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}"))
-                .andExpect(status().isOk());
+                .content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-01\",\"amount\":100.50,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}"));
+        mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-10\",\"amount\":200.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}"));
 
-        mockMvc.perform(get("/api/users/{userId}/transactions", userId))
+        mockMvc.perform(get("/api/users/{userId}/transactions", userId).param("from", "2026-05-05").param("to", "2026-05-31"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].amount").value(100.50));
+                .andExpect(jsonPath("$[0].amount").value(200.00))
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void filterByMerchantContainsIgnoreCase() throws Exception {
+        String userId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"T2\",\"email\":\"t2@a.com\",\"status\":\"ACTIVE\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+        String accountId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/accounts", userId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"HDFC\",\"accountType\":\"BANK_ACCOUNT\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+
+        mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-01\",\"amount\":120.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\",\"merchant\":\"Amazon Fresh\"}"));
+        mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-02\",\"amount\":20.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\",\"merchant\":\"Metro\"}"));
+
+        mockMvc.perform(get("/api/users/{userId}/transactions", userId).param("merchant", "AMAZON"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].merchant").value("Amazon Fresh"))
+                .andExpect(jsonPath("$.length()").value(1));
     }
 }

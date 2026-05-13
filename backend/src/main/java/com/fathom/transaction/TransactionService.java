@@ -4,9 +4,14 @@ import com.fathom.account.FinancialAccount;
 import com.fathom.account.FinancialAccountService;
 import com.fathom.common.ResourceNotFoundException;
 import com.fathom.user.UserService;
+import jakarta.persistence.criteria.Predicate;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,13 +39,36 @@ public class TransactionService {
         return toResponse(repository.save(t));
     }
 
-    public List<TransactionDtos.TransactionResponse> list(UUID userId, LocalDate from, LocalDate to) {
+    public List<TransactionDtos.TransactionResponse> list(UUID userId, LocalDate from, LocalDate to, UUID accountId, UUID categoryId,
+                                                          TransactionType transactionType, Direction direction, TransactionSource source,
+                                                          String merchant, BigDecimal minAmount, BigDecimal maxAmount) {
         userService.getEntity(userId);
-        if (from != null && to != null) return repository.findByUserIdAndTransactionDateBetween(userId, from, to).stream().map(this::toResponse).toList();
-        return repository.findByUserId(userId).stream().map(this::toResponse).toList();
+        Specification<Transaction> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("userId"), userId));
+            if (from != null) predicates.add(cb.greaterThanOrEqualTo(root.get("transactionDate"), from));
+            if (to != null) predicates.add(cb.lessThanOrEqualTo(root.get("transactionDate"), to));
+            if (accountId != null) predicates.add(cb.equal(root.get("accountId"), accountId));
+            if (categoryId != null) predicates.add(cb.equal(root.get("categoryId"), categoryId));
+            if (transactionType != null) predicates.add(cb.equal(root.get("transactionType"), transactionType));
+            if (direction != null) predicates.add(cb.equal(root.get("direction"), direction));
+            if (source != null) predicates.add(cb.equal(root.get("source"), source));
+            if (merchant != null && !merchant.isBlank()) predicates.add(cb.like(cb.lower(root.get("merchant")), "%" + merchant.toLowerCase() + "%"));
+            if (minAmount != null) predicates.add(cb.greaterThanOrEqualTo(root.get("amount"), minAmount));
+            if (maxAmount != null) predicates.add(cb.lessThanOrEqualTo(root.get("amount"), maxAmount));
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return repository.findAll(spec, Sort.by(Sort.Order.desc("transactionDate"), Sort.Order.desc("createdAt"))).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     public TransactionDtos.TransactionResponse get(UUID id) { return toResponse(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Transaction not found"))); }
 
-    private TransactionDtos.TransactionResponse toResponse(Transaction t){ return new TransactionDtos.TransactionResponse(t.getId(),t.getUserId(),t.getAccountId(),t.getCategoryId(),t.getTransactionDate(),t.getAmount(),t.getDirection(),t.getTransactionType(),t.getSource(),t.getMerchant(),t.getCreatedAt(),t.getUpdatedAt()); }
+    private TransactionDtos.TransactionResponse toResponse(Transaction t){
+        return new TransactionDtos.TransactionResponse(t.getId(),t.getUserId(),t.getAccountId(),t.getCategoryId(),t.getTransactionDate(),
+                t.getAmount(),t.getDirection(),t.getTransactionType(),t.getSource(),t.getRawDescription(),t.getMerchant(),t.getNotes(),
+                t.isInternalTransfer(),t.isInvestmentTransfer(),t.isDebtPayment(),t.getImportHash(),t.getCreatedAt(),t.getUpdatedAt());
+    }
 }
