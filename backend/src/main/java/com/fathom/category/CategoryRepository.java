@@ -11,4 +11,6 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<Category> findBySystemDefaultTrueAndActiveTrue();
     Optional<Category> findByUserIdAndNameIgnoreCaseAndActiveTrue(UUID userId, String name);
     Optional<Category> findBySystemDefaultTrueAndNameIgnoreCaseAndActiveTrue(String name);
+    boolean existsByUserIdAndCategoryTypeAndNameIgnoreCase(UUID userId, CategoryType categoryType, String name);
+    Optional<Category> findByUserIdAndCategoryTypeAndNameIgnoreCase(UUID userId, CategoryType categoryType, String name);
 }

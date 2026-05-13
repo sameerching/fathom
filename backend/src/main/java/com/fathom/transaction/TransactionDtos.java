@@ -26,6 +26,10 @@ public class TransactionDtos {
             String importHash
     ) {}
 
+    public record UpdateTransactionCategoryRequest(
+            UUID categoryId
+    ) {}
+
     public record TransactionResponse(
             UUID id,
             UUID userId,

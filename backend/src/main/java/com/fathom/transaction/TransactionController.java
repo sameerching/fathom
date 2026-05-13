@@ -38,6 +38,12 @@ public class TransactionController {
         return service.list(userId, from, to, accountId, categoryId, transactionType, direction, source, merchant, minAmount, maxAmount);
     }
 
+
+    @PatchMapping("/api/transactions/{transactionId}/category")
+    TransactionDtos.TransactionResponse updateCategory(@PathVariable UUID transactionId, @Valid @RequestBody TransactionDtos.UpdateTransactionCategoryRequest request) {
+        return service.updateCategory(transactionId, request);
+    }
+
     @GetMapping("/api/transactions/{transactionId}")
     TransactionDtos.TransactionResponse get(@PathVariable UUID transactionId) {
         return service.get(transactionId);

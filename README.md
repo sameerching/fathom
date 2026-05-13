@@ -157,3 +157,8 @@ curl -X POST http://localhost:8080/api/users/{userId}/accounts \
 5. Upload sample CSV
 6. Open `/dashboard`
 7. Review transactions
+
+## Phase 8 Category Management
+- Create custom categories from `/categories`.
+- Assign or clear transaction categories from `/transactions`.
+- Dashboard category breakdown now reflects updated transaction category assignments.
