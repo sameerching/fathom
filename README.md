@@ -141,7 +141,7 @@ Optional advanced flow (API-first):
 ```bash
 curl -X POST http://localhost:8080/api/users \
   -H 'Content-Type: application/json' \
-  -d '{"name":"Alice","email":"alice.com","status":"ACTIVE"}'
+  -d '{"name":"Alice","email":"alice@example.com","status":"ACTIVE"}'
 
 curl -X POST http://localhost:8080/api/users/{userId}/accounts \
   -H 'Content-Type: application/json' \

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
-import { Account, createAccount, createUser, CreateAccountRequest, CreateUserRequest, getUsers, User } from '../../../lib/api';
+import { Account, createAccount, createUser, CreateAccountRequest, CreateUserRequest, getUsers, User } from '../../lib/api';
 
 const accountTypes = ['BANK_ACCOUNT', 'CREDIT_CARD', 'BROKERAGE', 'CASH', 'LOAN', 'MANUAL'];
 
