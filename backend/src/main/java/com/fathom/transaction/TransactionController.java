@@ -1,6 +1,7 @@
 package com.fathom.transaction;
 
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -21,10 +22,20 @@ public class TransactionController {
     }
 
     @GetMapping("/api/users/{userId}/transactions")
-    List<TransactionDtos.TransactionResponse> list(@PathVariable UUID userId,
-                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return service.list(userId, from, to);
+    List<TransactionDtos.TransactionResponse> list(
+            @PathVariable UUID userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) UUID accountId,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) TransactionType transactionType,
+            @RequestParam(required = false) Direction direction,
+            @RequestParam(required = false) TransactionSource source,
+            @RequestParam(required = false) String merchant,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount
+    ) {
+        return service.list(userId, from, to, accountId, categoryId, transactionType, direction, source, merchant, minAmount, maxAmount);
     }
 
     @GetMapping("/api/transactions/{transactionId}")

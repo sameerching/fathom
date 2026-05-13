@@ -100,3 +100,25 @@ curl -X POST "http://localhost:8080/api/users/{userId}/accounts/{accountId}/tran
 Duplicate detection is hash-based on `userId + accountId + transactionDate + direction + amount + normalized(rawDescription)`; duplicates are skipped during import.
 
 Out of scope in Phase 3: bank-specific CSV parsers and provider integrations.
+
+## Phase 4: Dashboard & Filtering APIs
+
+Filtered transaction listing:
+```bash
+curl "http://localhost:8080/api/users/{userId}/transactions?from=2026-05-01&to=2026-05-31&merchant=amazon&minAmount=100"
+```
+
+Monthly summary:
+```bash
+curl "http://localhost:8080/api/users/{userId}/dashboard/monthly-summary?month=2026-05"
+```
+
+Category breakdown:
+```bash
+curl "http://localhost:8080/api/users/{userId}/dashboard/category-breakdown?from=2026-05-01&to=2026-05-31&type=EXPENSE"
+```
+
+Net worth summary:
+```bash
+curl "http://localhost:8080/api/users/{userId}/dashboard/net-worth"
+```
