@@ -1,0 +1,1 @@
+package com.fathom.investment; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface InvestmentHoldingRepository extends JpaRepository<InvestmentHolding,UUID>{ List<InvestmentHolding> findByUserId(UUID userId); List<InvestmentHolding> findByUserIdAndActiveTrue(UUID userId);} 

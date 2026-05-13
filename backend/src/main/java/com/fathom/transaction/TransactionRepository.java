@@ -1,0 +1,1 @@
+package com.fathom.transaction; import java.time.LocalDate; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface TransactionRepository extends JpaRepository<Transaction,UUID>{ List<Transaction> findByUserId(UUID userId); List<Transaction> findByUserIdAndTransactionDateBetween(UUID userId, LocalDate from, LocalDate to);} 

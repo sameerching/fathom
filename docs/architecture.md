@@ -1,41 +1,26 @@
-# Fathom Architecture (Phase 1)
+# Fathom Architecture (Phase 2)
 
 ## High-Level Architecture
-Fathom uses a monorepo with two independently runnable applications:
-- **Backend**: Java 21 + Spring Boot REST API using Maven.
-- **Frontend**: Next.js + TypeScript web app.
-- **Database**: PostgreSQL running in Docker Compose for local development.
+- Backend: Spring Boot 3 (Java 21), REST APIs, JPA, Flyway.
+- Frontend: Next.js.
+- Database: PostgreSQL (dev), H2 (tests, PostgreSQL compatibility mode).
 
-## Backend Modules
-Base package: `com.fathom`
-- `common`: shared utilities and cross-cutting concerns.
-- `health`: service health endpoints.
-- `user`: future user profiles and settings.
-- `account`: future financial account domain.
-- `transaction`: future transactions and ledger flows.
-- `category`: future spending and income categories.
-- `investment`: future holdings and valuation models.
-- `liability`: future debts and obligations.
-- `dashboard`: future summary aggregations.
-- `upload`: future import and ingestion flow.
+## Backend Domain Packages
+- `com.fathom.common`: base entity auditing (`created_at`, `updated_at`), error handling.
+- `com.fathom.user`: `AppUser` domain and APIs.
+- `com.fathom.account`: `FinancialAccount` domain and APIs.
+- `com.fathom.category`: `Category` domain and APIs.
+- `com.fathom.transaction`: `Transaction` ledger domain and APIs.
+- `com.fathom.investment`: `InvestmentHolding` domain and APIs.
+- `com.fathom.liability`: `Liability` domain and APIs.
 
-Only the `health` module is implemented in Phase 1.
+## Data Model (Core)
+- UUID primary keys for all entities.
+- BigDecimal for money fields.
+- LocalDate for value/transaction dates.
+- Instant for audit timestamps.
+- Enums for stable domain values.
 
-## Frontend Pages
-- `/` Landing page with product title, subtitle, and navigation placeholders:
-  - Dashboard
-  - Transactions
-  - Upload
-  - Investments
-  - Liabilities
-  - Net Worth
-
-## Database Choice
-PostgreSQL is selected for reliability, transactional consistency, and strong Spring Data JPA support.
-
-## Future Integration Ideas
-- Secure user authentication and authorization.
-- Bank account and credit card aggregation integrations.
-- Transaction upload and categorization workflows.
-- Investment data refresh and portfolio analytics.
-- Dashboard insights for net worth and monthly cash flow.
+## Migration Strategy
+- Flyway migration: `V1__create_core_schema.sql`
+- Hibernate DDL mode remains `validate`.

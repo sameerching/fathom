@@ -1,0 +1,34 @@
+package com.fathom.transaction;
+
+import jakarta.validation.Valid;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+public class TransactionController {
+    private final TransactionService service;
+
+    public TransactionController(TransactionService service) {
+        this.service = service;
+    }
+
+    @PostMapping("/api/users/{userId}/transactions")
+    TransactionDtos.TransactionResponse create(@PathVariable UUID userId, @Valid @RequestBody TransactionDtos.CreateTransactionRequest request) {
+        return service.create(userId, request);
+    }
+
+    @GetMapping("/api/users/{userId}/transactions")
+    List<TransactionDtos.TransactionResponse> list(@PathVariable UUID userId,
+                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return service.list(userId, from, to);
+    }
+
+    @GetMapping("/api/transactions/{transactionId}")
+    TransactionDtos.TransactionResponse get(@PathVariable UUID transactionId) {
+        return service.get(transactionId);
+    }
+}

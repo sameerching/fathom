@@ -1,0 +1,1 @@
+package com.fathom.liability; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface LiabilityRepository extends JpaRepository<Liability,UUID>{ List<Liability> findByUserId(UUID userId); List<Liability> findByUserIdAndActiveTrue(UUID userId);} 
