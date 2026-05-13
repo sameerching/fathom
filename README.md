@@ -77,3 +77,26 @@ curl -X POST http://localhost:8080/api/users/{userId}/liabilities \
   -H 'Content-Type: application/json' \
   -d '{"liabilityType":"HOME_LOAN","name":"Home Loan","outstandingAmount":2500000.00}'
 ```
+
+## Phase 3: CSV Transaction Import (MVP)
+
+Normalized CSV headers:
+- Required: `transactionDate,direction,amount,rawDescription,transactionType`
+- Optional: `merchant,categoryName,notes`
+
+Example:
+```csv
+transactionDate,direction,amount,rawDescription,merchant,transactionType,categoryName,notes
+2026-05-01,DEBIT,1250.00,Swiggy order,Swiggy,EXPENSE,Food,Dinner
+2026-05-02,CREDIT,850000.00,Salary credited,Employer,INCOME,Salary,Monthly salary
+```
+
+Upload command:
+```bash
+curl -X POST "http://localhost:8080/api/users/{userId}/accounts/{accountId}/transaction-imports?source=MANUAL" \
+  -F "file=@transactions.csv"
+```
+
+Duplicate detection is hash-based on `userId + accountId + transactionDate + direction + amount + normalized(rawDescription)`; duplicates are skipped during import.
+
+Out of scope in Phase 3: bank-specific CSV parsers and provider integrations.
