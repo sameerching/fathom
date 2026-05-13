@@ -40,7 +40,7 @@ docker compose down
 
 ```bash
 cd backend
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 Backend runs on: `http://localhost:8080`

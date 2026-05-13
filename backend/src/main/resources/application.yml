@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/fathom
-    username: fathom
-    password: fathom_dev
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/fathom}
+    username: ${SPRING_DATASOURCE_USERNAME:fathom}
+    password: ${SPRING_DATASOURCE_PASSWORD:fathom_dev}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
