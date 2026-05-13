@@ -1,0 +1,1 @@
+package com.fathom.category; import java.util.*; import org.springframework.data.jpa.repository.JpaRepository; public interface CategoryRepository extends JpaRepository<Category,UUID>{ List<Category> findByUserId(UUID userId); List<Category> findByUserIdAndActiveTrue(UUID userId); List<Category> findBySystemDefaultTrueAndActiveTrue(); }

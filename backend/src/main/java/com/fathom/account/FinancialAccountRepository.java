@@ -1,0 +1,1 @@
+package com.fathom.account;import java.util.*;import org.springframework.data.jpa.repository.JpaRepository; public interface FinancialAccountRepository extends JpaRepository<FinancialAccount,UUID>{ List<FinancialAccount> findByUserId(UUID userId); List<FinancialAccount> findByUserIdAndActiveTrue(UUID userId);} 

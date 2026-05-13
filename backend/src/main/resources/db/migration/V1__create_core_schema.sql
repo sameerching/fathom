@@ -1,0 +1,31 @@
+CREATE TABLE app_users (id UUID PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL UNIQUE, status VARCHAR(20) NOT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL);
+CREATE TABLE financial_accounts (id UUID PRIMARY KEY,user_id UUID NOT NULL REFERENCES app_users(id),name VARCHAR(255) NOT NULL,institution_name VARCHAR(255),account_type VARCHAR(30) NOT NULL,currency VARCHAR(3) NOT NULL DEFAULT 'INR',masked_identifier VARCHAR(255),active BOOLEAN NOT NULL DEFAULT TRUE,created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL);
+CREATE TABLE categories (id UUID PRIMARY KEY,user_id UUID REFERENCES app_users(id),name VARCHAR(255) NOT NULL,category_type VARCHAR(30) NOT NULL,parent_category_id UUID REFERENCES categories(id),system_default BOOLEAN NOT NULL DEFAULT FALSE,active BOOLEAN NOT NULL DEFAULT TRUE,created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL);
+CREATE TABLE transactions (id UUID PRIMARY KEY,user_id UUID NOT NULL REFERENCES app_users(id),account_id UUID NOT NULL REFERENCES financial_accounts(id),category_id UUID REFERENCES categories(id),transaction_date DATE NOT NULL,amount NUMERIC(19,4) NOT NULL,direction VARCHAR(10) NOT NULL,transaction_type VARCHAR(30) NOT NULL,source VARCHAR(30) NOT NULL,raw_description TEXT,merchant VARCHAR(255),notes TEXT,internal_transfer BOOLEAN NOT NULL DEFAULT FALSE,investment_transfer BOOLEAN NOT NULL DEFAULT FALSE,debt_payment BOOLEAN NOT NULL DEFAULT FALSE,linked_transaction_id UUID REFERENCES transactions(id),import_hash VARCHAR(255),created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL);
+CREATE INDEX idx_transactions_user_date ON transactions(user_id, transaction_date);
+CREATE INDEX idx_transactions_user_account ON transactions(user_id, account_id);
+CREATE INDEX idx_transactions_user_category ON transactions(user_id, category_id);
+CREATE INDEX idx_transactions_import_hash ON transactions(import_hash);
+CREATE TABLE investment_holdings (id UUID PRIMARY KEY,user_id UUID NOT NULL REFERENCES app_users(id),asset_type VARCHAR(30) NOT NULL,name VARCHAR(255) NOT NULL,provider VARCHAR(255),symbol VARCHAR(100),currency VARCHAR(3) NOT NULL DEFAULT 'INR',invested_amount NUMERIC(19,4) NOT NULL DEFAULT 0,current_value NUMERIC(19,4) NOT NULL DEFAULT 0,as_of_date DATE,active BOOLEAN NOT NULL DEFAULT TRUE,created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL);
+CREATE TABLE liabilities (id UUID PRIMARY KEY,user_id UUID NOT NULL REFERENCES app_users(id),liability_type VARCHAR(30) NOT NULL,name VARCHAR(255) NOT NULL,lender VARCHAR(255),currency VARCHAR(3) NOT NULL DEFAULT 'INR',principal_amount NUMERIC(19,4),outstanding_amount NUMERIC(19,4) NOT NULL,interest_rate NUMERIC(8,4),emi_amount NUMERIC(19,4),start_date DATE,end_date DATE,active BOOLEAN NOT NULL DEFAULT TRUE,created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL);
+INSERT INTO categories (id,user_id,name,category_type,parent_category_id,system_default,active,created_at,updated_at) VALUES
+(random_uuid(),NULL,'Salary','INCOME',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Food','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Groceries','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Shopping','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Travel','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Transport','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Rent','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Utilities','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Entertainment','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Subscription','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Healthcare','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Insurance','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Education','EXPENSE',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Investment','INVESTMENT',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'SIP','INVESTMENT',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Credit Card Payment','LIABILITY_PAYMENT',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Loan EMI','LIABILITY_PAYMENT',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Transfer','TRANSFER',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Refund','ADJUSTMENT',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+(random_uuid(),NULL,'Other','ADJUSTMENT',NULL,TRUE,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
