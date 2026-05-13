@@ -33,6 +33,10 @@ public class TransactionService {
         userService.getEntity(userId);
         FinancialAccount account = accountService.getEntity(r.accountId());
         if (!account.getUserId().equals(userId)) throw new ResourceNotFoundException("Account not found");
+        if (r.categoryId() != null) {
+            categoryService.resolveCategoryForUser(userId, r.categoryId());
+        }
+
         Transaction t = new Transaction();
         t.setUserId(userId); t.setAccountId(r.accountId()); t.setCategoryId(r.categoryId()); t.setTransactionDate(r.transactionDate());
         t.setAmount(r.amount()); t.setDirection(r.direction()); t.setTransactionType(r.transactionType()); t.setSource(r.source());

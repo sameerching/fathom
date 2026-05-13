@@ -37,4 +37,28 @@ class TransactionControllerIntegrationTest {
 
     @Test
     void updateTransactionCategoryFlows() throws Exception { String userId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"T3\",\"email\":\"t3@a.com\",\"status\":\"ACTIVE\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String accountId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/accounts", userId).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"SBI\",\"accountType\":\"BANK_ACCOUNT\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String txId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-01\",\"amount\":120.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String customCategoryId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/categories", userId).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Coffee\",\"categoryType\":\"EXPENSE\",\"parentCategoryId\":null}")).andReturn().getResponse().getContentAsString()).get("id").asText(); mockMvc.perform(patch("/api/transactions/{transactionId}/category", txId).contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":\"00000000-0000-0000-0000-000000000002\"}")).andExpect(status().isOk()); mockMvc.perform(patch("/api/transactions/{transactionId}/category", txId).contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":\"" + customCategoryId + "\"}")).andExpect(status().isOk()); mockMvc.perform(patch("/api/transactions/{transactionId}/category", txId).contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":null}")).andExpect(status().isOk()).andExpect(jsonPath("$.categoryId").isEmpty()); String otherUserId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"T4\",\"email\":\"t4@a.com\",\"status\":\"ACTIVE\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String otherCategoryId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/categories", otherUserId).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Private\",\"categoryType\":\"EXPENSE\",\"parentCategoryId\":null}")).andReturn().getResponse().getContentAsString()).get("id").asText(); mockMvc.perform(patch("/api/transactions/{transactionId}/category", txId).contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":\"" + otherCategoryId + "\"}")).andExpect(status().isBadRequest()); }
+
+
+    @Test
+    void createTransactionRejectsAnotherUsersCategory() throws Exception {
+        String userAId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"UA\",\"email\":\"ua@a.com\",\"status\":\"ACTIVE\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+        String userBId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"UB\",\"email\":\"ub@a.com\",\"status\":\"ACTIVE\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+
+        String accountAId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/accounts", userAId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"A\",\"accountType\":\"BANK_ACCOUNT\"}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+
+        String userBCategoryId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/categories", userBId).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"B Only\",\"categoryType\":\"EXPENSE\",\"parentCategoryId\":null}"))
+                .andReturn().getResponse().getContentAsString()).get("id").asText();
+
+        mockMvc.perform(post("/api/users/{userId}/transactions", userAId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accountId\":\"" + accountAId + "\",\"categoryId\":\"" + userBCategoryId + "\",\"transactionDate\":\"2026-05-03\",\"amount\":50.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
 }
