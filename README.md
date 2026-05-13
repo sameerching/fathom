@@ -147,3 +147,13 @@ curl -X POST http://localhost:8080/api/users/{userId}/accounts \
   -H 'Content-Type: application/json' \
   -d '{"name":"Primary Account","accountType":"BANK_ACCOUNT"}'
 ```
+
+## Phase 7: Recommended local demo flow
+
+1. Open `/setup`
+2. Create user
+3. Create account
+4. Open `/upload`
+5. Upload sample CSV
+6. Open `/dashboard`
+7. Review transactions

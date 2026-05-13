@@ -1,26 +1,17 @@
 import Link from 'next/link';
-
-const links = [
-  ['Setup', '/setup'],
-  ['Dashboard', '/dashboard'],
-  ['Transactions', '/transactions'],
-  ['Upload', '/upload'],
-  ['Investments', '/investments'],
-  ['Liabilities', '/liabilities']
-];
+import AppShell from '../components/AppShell';
 
 export default function HomePage() {
   return (
-    <main className="container">
-      <h1>Fathom</h1>
-      <p>Understand your money.</p>
-      <ul>
-        {links.map(([label, href], index) => (
-          <li key={href}>
-            <Link href={href}>{index === 0 ? `⭐ ${label}` : label}</Link>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <AppShell>
+      <div className="panel">
+        <h2>Welcome</h2>
+        <p>Start with setup, then upload your CSV and explore your dashboard.</p>
+        <div className="row">
+          <Link href="/setup">Go to Setup</Link>
+          <Link href="/dashboard">Go to Dashboard</Link>
+        </div>
+      </div>
+    </AppShell>
   );
 }
