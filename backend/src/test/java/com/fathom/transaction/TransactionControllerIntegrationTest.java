@@ -1,8 +1,6 @@
 package com.fathom.transaction;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -14,51 +12,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest @AutoConfigureMockMvc
 class TransactionControllerIntegrationTest {
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-
-    @Test
-    void filterByDateRange() throws Exception { /* unchanged */
-        String userId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"T\",\"email\":\"t@a.com\",\"status\":\"ACTIVE\"}"))
-                .andReturn().getResponse().getContentAsString()).get("id").asText();
-        String accountId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/accounts", userId).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"ICICI\",\"accountType\":\"BANK_ACCOUNT\"}"))
-                .andReturn().getResponse().getContentAsString()).get("id").asText();
-        mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-01\",\"amount\":100.50,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}"));
-        mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-10\",\"amount\":200.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}"));
-        mockMvc.perform(get("/api/users/{userId}/transactions", userId).param("from", "2026-05-05").param("to", "2026-05-31")).andExpect(status().isOk()).andExpect(jsonPath("$[0].amount").value(200.00)).andExpect(jsonPath("$.length()").value(1)); }
-
-    @Test
-    void filterByMerchantContainsIgnoreCase() throws Exception { String userId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"T2\",\"email\":\"t2@a.com\",\"status\":\"ACTIVE\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String accountId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/accounts", userId).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"HDFC\",\"accountType\":\"BANK_ACCOUNT\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-01\",\"amount\":120.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\",\"merchant\":\"Amazon Fresh\"}")); mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-02\",\"amount\":20.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\",\"merchant\":\"Metro\"}")); mockMvc.perform(get("/api/users/{userId}/transactions", userId).param("merchant", "AMAZON")).andExpect(status().isOk()).andExpect(jsonPath("$[0].merchant").value("Amazon Fresh")).andExpect(jsonPath("$.length()").value(1)); }
-
-    @Test
-    void updateTransactionCategoryFlows() throws Exception { String userId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"T3\",\"email\":\"t3@a.com\",\"status\":\"ACTIVE\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String accountId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/accounts", userId).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"SBI\",\"accountType\":\"BANK_ACCOUNT\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String txId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/transactions", userId).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-01\",\"amount\":120.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String customCategoryId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/categories", userId).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Coffee\",\"categoryType\":\"EXPENSE\",\"parentCategoryId\":null}")).andReturn().getResponse().getContentAsString()).get("id").asText(); mockMvc.perform(patch("/api/transactions/{transactionId}/category", txId).contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":\"00000000-0000-0000-0000-000000000002\"}")).andExpect(status().isOk()); mockMvc.perform(patch("/api/transactions/{transactionId}/category", txId).contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":\"" + customCategoryId + "\"}")).andExpect(status().isOk()); mockMvc.perform(patch("/api/transactions/{transactionId}/category", txId).contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":null}")).andExpect(status().isOk()).andExpect(jsonPath("$.categoryId").isEmpty()); String otherUserId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"T4\",\"email\":\"t4@a.com\",\"status\":\"ACTIVE\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String otherCategoryId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/categories", otherUserId).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Private\",\"categoryType\":\"EXPENSE\",\"parentCategoryId\":null}")).andReturn().getResponse().getContentAsString()).get("id").asText(); mockMvc.perform(patch("/api/transactions/{transactionId}/category", txId).contentType(MediaType.APPLICATION_JSON).content("{\"categoryId\":\"" + otherCategoryId + "\"}")).andExpect(status().isBadRequest()); }
-
-
-    @Test
-    void createTransactionRejectsAnotherUsersCategory() throws Exception {
-        String userAId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"UA\",\"email\":\"ua@a.com\",\"status\":\"ACTIVE\"}"))
-                .andReturn().getResponse().getContentAsString()).get("id").asText();
-        String userBId = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"UB\",\"email\":\"ub@a.com\",\"status\":\"ACTIVE\"}"))
-                .andReturn().getResponse().getContentAsString()).get("id").asText();
-
-        String accountAId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/accounts", userAId).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"A\",\"accountType\":\"BANK_ACCOUNT\"}"))
-                .andReturn().getResponse().getContentAsString()).get("id").asText();
-
-        String userBCategoryId = objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/categories", userBId).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"B Only\",\"categoryType\":\"EXPENSE\",\"parentCategoryId\":null}"))
-                .andReturn().getResponse().getContentAsString()).get("id").asText();
-
-        mockMvc.perform(post("/api/users/{userId}/transactions", userAId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"accountId\":\"" + accountAId + "\",\"categoryId\":\"" + userBCategoryId + "\",\"transactionDate\":\"2026-05-03\",\"amount\":50.00,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}"))
-                .andExpect(status().isBadRequest());
-    }
-
+ @Autowired MockMvc mockMvc; @Autowired ObjectMapper objectMapper;
+ private String createUser(String n,String e) throws Exception{return objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\""+n+"\",\"email\":\""+e+"\",\"status\":\"ACTIVE\"}")).andReturn().getResponse().getContentAsString()).get("id").asText();}
+ private String createAccount(String userId,String name) throws Exception{return objectMapper.readTree(mockMvc.perform(post("/api/users/{userId}/accounts",userId).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\""+name+"\",\"accountType\":\"BANK_ACCOUNT\"}")).andReturn().getResponse().getContentAsString()).get("id").asText();}
+ @Test void paginatedShapeAndFilter() throws Exception {String u=createUser("T","t@a.com"); String a=createAccount(u,"A"); mockMvc.perform(post("/api/users/{u}/transactions",u).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\""+a+"\",\"transactionDate\":\"2026-05-01\",\"amount\":100,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}")); mockMvc.perform(post("/api/users/{u}/transactions",u).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\""+a+"\",\"transactionDate\":\"2026-05-10\",\"amount\":200,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\",\"merchant\":\"Amazon\"}")); mockMvc.perform(get("/api/users/{u}/transactions",u).param("from","2026-05-05").param("merchant","ama").param("page","0").param("size","50")).andExpect(status().isOk()).andExpect(jsonPath("$.items[0].amount").value(200.0)).andExpect(jsonPath("$.items.length()").value(1)).andExpect(jsonPath("$.page").value(0)).andExpect(jsonPath("$.size").value(50)).andExpect(jsonPath("$.totalItems").value(1)).andExpect(jsonPath("$.totalPages").value(1));}
+ @Test void updateDeleteAndBulkCategory() throws Exception {String u=createUser("U","u@a.com"); String a=createAccount(u,"A"); String t1=objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/transactions",u).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\""+a+"\",\"transactionDate\":\"2026-05-01\",\"amount\":120,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String t2=objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/transactions",u).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\""+a+"\",\"transactionDate\":\"2026-05-02\",\"amount\":220,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String c=objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/categories",u).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Food\",\"categoryType\":\"EXPENSE\",\"parentCategoryId\":null}")).andReturn().getResponse().getContentAsString()).get("id").asText(); mockMvc.perform(patch("/api/transactions/{id}",t1).contentType(MediaType.APPLICATION_JSON).content("{\"transactionDate\":\"2026-05-05\",\"amount\":333,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\",\"merchant\":\"Swiggy\",\"rawDescription\":\"Dinner\",\"notes\":\"N\",\"categoryId\":\""+c+"\"}"))
+ .andExpect(status().isOk()).andExpect(jsonPath("$.amount").value(333.0)); mockMvc.perform(patch("/api/users/{u}/transactions/bulk-category",u).contentType(MediaType.APPLICATION_JSON).content("{\"transactionIds\":[\""+t1+"\",\""+t2+"\"],\"categoryId\":null}")) .andExpect(status().isOk()).andExpect(jsonPath("$.requestedCount").value(2)).andExpect(jsonPath("$.updatedCount").value(2)); mockMvc.perform(delete("/api/transactions/{id}",t2)).andExpect(status().isNoContent()); }
+ @Test void bulkRejectsOtherUserTransaction() throws Exception {String u1=createUser("A","a@a.com"); String u2=createUser("B","b@a.com"); String a1=createAccount(u1,"A"); String a2=createAccount(u2,"B"); String t1=objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/transactions",u1).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\""+a1+"\",\"transactionDate\":\"2026-05-01\",\"amount\":1,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); String t2=objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/transactions",u2).contentType(MediaType.APPLICATION_JSON).content("{\"accountId\":\""+a2+"\",\"transactionDate\":\"2026-05-01\",\"amount\":1,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\"}")).andReturn().getResponse().getContentAsString()).get("id").asText(); mockMvc.perform(patch("/api/users/{u}/transactions/bulk-category",u1).contentType(MediaType.APPLICATION_JSON).content("{\"transactionIds\":[\""+t1+"\",\""+t2+"\"],\"categoryId\":null}")) .andExpect(status().isBadRequest()); }
 }

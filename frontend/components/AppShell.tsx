@@ -11,6 +11,8 @@ const navItems = [
   { label: 'Transactions', href: '/transactions' },
   { label: 'Categories', href: '/categories' },
   { label: 'Rules', href: '/rules' },
+  { label: 'Budgets', href: '/budgets' },
+  { label: 'Imports', href: '/imports' },
   { label: 'Upload', href: '/upload' },
   { label: 'Investments', href: '/investments' },
   { label: 'Liabilities', href: '/liabilities' }
