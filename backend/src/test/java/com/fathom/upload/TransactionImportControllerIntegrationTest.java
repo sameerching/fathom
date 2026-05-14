@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,9 +24,9 @@ class TransactionImportControllerIntegrationTest {
 
     @Test
     void importScenarios() throws Exception {
-        String user1 = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U1\",\"email\":\"u1@a.com\",\"status\":\"ACTIVE\"}"))
+        String user1 = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U1\",\"email\":\"" + uniqueEmail("import-u1") + "\",\"status\":\"ACTIVE\"}"))
                 .andReturn().getResponse().getContentAsString()).get("id").asText();
-        String user2 = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U2\",\"email\":\"u2@a.com\",\"status\":\"ACTIVE\"}"))
+        String user2 = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U2\",\"email\":\"" + uniqueEmail("import-u2") + "\",\"status\":\"ACTIVE\"}"))
                 .andReturn().getResponse().getContentAsString()).get("id").asText();
         String account = objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/accounts", user1).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"A1\",\"accountType\":\"BANK_ACCOUNT\"}"))
                 .andReturn().getResponse().getContentAsString()).get("id").asText();
@@ -43,7 +44,7 @@ class TransactionImportControllerIntegrationTest {
 
     @Test
     void unsupportedSourceReturnsBadRequest() throws Exception {
-        String user = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U4\",\"email\":\"u4@a.com\",\"status\":\"ACTIVE\"}"))
+        String user = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U4\",\"email\":\"" + uniqueEmail("import-u4") + "\",\"status\":\"ACTIVE\"}"))
                 .andReturn().getResponse().getContentAsString()).get("id").asText();
         String account = objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/accounts", user).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"A4\",\"accountType\":\"BANK_ACCOUNT\"}"))
                 .andReturn().getResponse().getContentAsString()).get("id").asText();
@@ -56,7 +57,7 @@ class TransactionImportControllerIntegrationTest {
 
     @Test
     void importWithRequiredHeadersOnly() throws Exception {
-        String user = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U3\",\"email\":\"u3@a.com\",\"status\":\"ACTIVE\"}"))
+        String user = objectMapper.readTree(mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"U3\",\"email\":\"" + uniqueEmail("import-u3") + "\",\"status\":\"ACTIVE\"}"))
                 .andReturn().getResponse().getContentAsString()).get("id").asText();
         String account = objectMapper.readTree(mockMvc.perform(post("/api/users/{u}/accounts", user).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"A3\",\"accountType\":\"BANK_ACCOUNT\"}"))
                 .andReturn().getResponse().getContentAsString()).get("id").asText();
@@ -68,4 +69,7 @@ class TransactionImportControllerIntegrationTest {
                 .andExpect(jsonPath("$.failedCount").value(0));
     }
 
+    private String uniqueEmail(String prefix) {
+        return prefix + "-" + UUID.randomUUID() + "@example.com";
+    }
 }
