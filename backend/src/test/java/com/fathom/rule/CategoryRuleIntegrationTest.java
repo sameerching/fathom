@@ -23,10 +23,9 @@ class CategoryRuleIntegrationTest {
     @Test
     void applyRulesToExistingUncategorizedTransactions() throws Exception {
         TestIds ids = setupUserAccountAndCategory("rapply@a.com", "FoodX");
-        createRule(ids.userId, ids.categoryId, 10, "swiggy");
-
         createTransaction(ids.userId, ids.accountId, "Swiggy Instamart", null);
         createTransaction(ids.userId, ids.accountId, "No Match", null);
+        createRule(ids.userId, ids.categoryId, 10, "swiggy");
 
         mockMvc.perform(post("/api/users/{userId}/category-rules/apply", ids.userId))
                 .andExpect(status().isOk())
@@ -43,10 +42,9 @@ class CategoryRuleIntegrationTest {
     void firstMatchingRuleWinsByPriority() throws Exception {
         TestIds ids = setupUserAccountAndCategory("rpriority@a.com", "FoodP");
         String otherCategory = createCategory(ids.userId, "GroceriesP");
+        createTransaction(ids.userId, ids.accountId, "Swiggy Instamart", null);
         createRule(ids.userId, otherCategory, 20, "swiggy");
         createRule(ids.userId, ids.categoryId, 5, "swiggy");
-
-        createTransaction(ids.userId, ids.accountId, "Swiggy Instamart", null);
 
         mockMvc.perform(post("/api/users/{userId}/category-rules/apply", ids.userId))
                 .andExpect(status().isOk())
