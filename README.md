@@ -162,3 +162,10 @@ curl -X POST http://localhost:8080/api/users/{userId}/accounts \
 - Create custom categories from `/categories`.
 - Assign or clear transaction categories from `/transactions`.
 - Dashboard category breakdown now reflects updated transaction category assignments.
+
+
+## Phase 9 Auto-Categorization Rules
+- Create or use system/user categories in `/categories`.
+- Create rules in `/rules` (merchant/raw description + operator + priority).
+- Upload CSV in `/upload`; rows without resolvable categoryName are auto-categorized by rules.
+- Apply rules to existing transactions from `/rules` with optional date range and uncategorized-only mode.

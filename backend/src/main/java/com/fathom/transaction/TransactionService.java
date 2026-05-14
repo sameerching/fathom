@@ -4,6 +4,7 @@ import com.fathom.account.FinancialAccount;
 import com.fathom.account.FinancialAccountService;
 import com.fathom.category.CategoryService;
 import com.fathom.common.ResourceNotFoundException;
+import com.fathom.rule.CategoryRuleService;
 import com.fathom.user.UserService;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
@@ -21,12 +22,14 @@ public class TransactionService {
     private final UserService userService;
     private final FinancialAccountService accountService;
     private final CategoryService categoryService;
+    private final CategoryRuleService categoryRuleService;
 
-    public TransactionService(TransactionRepository repository, UserService userService, FinancialAccountService accountService, CategoryService categoryService) {
+    public TransactionService(TransactionRepository repository, UserService userService, FinancialAccountService accountService, CategoryService categoryService, CategoryRuleService categoryRuleService) {
         this.repository = repository;
         this.userService = userService;
         this.accountService = accountService;
         this.categoryService = categoryService;
+        this.categoryRuleService = categoryRuleService;
     }
 
     public TransactionDtos.TransactionResponse create(UUID userId, TransactionDtos.CreateTransactionRequest r) {
@@ -39,6 +42,7 @@ public class TransactionService {
 
         Transaction t = new Transaction();
         t.setUserId(userId); t.setAccountId(r.accountId()); t.setCategoryId(r.categoryId()); t.setTransactionDate(r.transactionDate());
+        if (t.getCategoryId() == null) categoryRuleService.matchCategoryId(userId, t).ifPresent(t::setCategoryId);
         t.setAmount(r.amount()); t.setDirection(r.direction()); t.setTransactionType(r.transactionType()); t.setSource(r.source());
         t.setRawDescription(r.rawDescription()); t.setMerchant(r.merchant()); t.setNotes(r.notes());
         t.setInternalTransfer(Boolean.TRUE.equals(r.internalTransfer())); t.setInvestmentTransfer(Boolean.TRUE.equals(r.investmentTransfer())); t.setDebtPayment(Boolean.TRUE.equals(r.debtPayment()));
