@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,11 +23,16 @@ class UserControllerIntegrationTest {
 
     @Test
     void createAndGetUser() throws Exception {
-        String body = "{\"name\":\"A\",\"email\":\"a@a.com\",\"status\":\"ACTIVE\"}";
+        String email = uniqueEmail("user");
+        String body = "{\"name\":\"A\",\"email\":\"" + email + "\",\"status\":\"ACTIVE\"}";
         String response = mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").exists()).andReturn().getResponse().getContentAsString();
         JsonNode node = objectMapper.readTree(response);
         String id = node.get("id").asText();
-        mockMvc.perform(get("/api/users/{id}", id)).andExpect(status().isOk()).andExpect(jsonPath("$.email").value("a@a.com"));
+        mockMvc.perform(get("/api/users/{id}", id)).andExpect(status().isOk()).andExpect(jsonPath("$.email").value(email));
+    }
+
+    private String uniqueEmail(String prefix) {
+        return prefix + "-" + UUID.randomUUID() + "@example.com";
     }
 }

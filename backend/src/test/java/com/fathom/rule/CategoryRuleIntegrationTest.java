@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,7 +23,7 @@ class CategoryRuleIntegrationTest {
 
     @Test
     void applyRulesToExistingUncategorizedTransactions() throws Exception {
-        TestIds ids = setupUserAccountAndCategory("rapply@a.com", "FoodX");
+        TestIds ids = setupUserAccountAndCategory(uniqueEmail("rapply"), "FoodX");
         createTransaction(ids.userId, ids.accountId, "Swiggy Instamart", null);
         createTransaction(ids.userId, ids.accountId, "No Match", null);
         createRule(ids.userId, ids.categoryId, 10, "swiggy");
@@ -36,7 +37,7 @@ class CategoryRuleIntegrationTest {
         String transactions = mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        JsonNode rows = objectMapper.readTree(transactions);
+        JsonNode rows = objectMapper.readTree(transactions).get("items");
         for (JsonNode row : rows) {
             if ("Swiggy Instamart".equals(row.get("merchant").asText())) {
                 org.junit.jupiter.api.Assertions.assertEquals(ids.categoryId, row.get("categoryId").asText());
@@ -49,7 +50,7 @@ class CategoryRuleIntegrationTest {
 
     @Test
     void firstMatchingRuleWinsByPriority() throws Exception {
-        TestIds ids = setupUserAccountAndCategory("rpriority@a.com", "FoodP");
+        TestIds ids = setupUserAccountAndCategory(uniqueEmail("rpriority"), "FoodP");
         String otherCategory = createCategory(ids.userId, "GroceriesP");
         createTransaction(ids.userId, ids.accountId, "Swiggy Instamart", null);
         createRule(ids.userId, otherCategory, 20, "swiggy");
@@ -62,7 +63,7 @@ class CategoryRuleIntegrationTest {
         String transactions = mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        JsonNode rows = objectMapper.readTree(transactions);
+        JsonNode rows = objectMapper.readTree(transactions).get("items");
         for (JsonNode row : rows) {
             if ("Swiggy Instamart".equals(row.get("merchant").asText())) {
                 org.junit.jupiter.api.Assertions.assertEquals(ids.categoryId, row.get("categoryId").asText());
@@ -75,7 +76,7 @@ class CategoryRuleIntegrationTest {
 
     @Test
     void csvImportAutoCategorizesAndNonMatchingRemainUncategorized() throws Exception {
-        TestIds ids = setupUserAccountAndCategory("rcsv@a.com", "FoodCsv");
+        TestIds ids = setupUserAccountAndCategory(uniqueEmail("rcsv"), "FoodCsv");
         createRule(ids.userId, ids.categoryId, 10, "swiggy");
 
         String csv = "transactionDate,direction,amount,rawDescription,merchant,transactionType\n" +
@@ -87,15 +88,23 @@ class CategoryRuleIntegrationTest {
                         .param("source", "MANUAL"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
+        String transactions = mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[1].categoryId").value(ids.categoryId))
-                .andExpect(jsonPath("$[0].categoryId").isEmpty());
+                .andReturn().getResponse().getContentAsString();
+        JsonNode rows = objectMapper.readTree(transactions).get("items");
+        for (JsonNode row : rows) {
+            if ("Swiggy Instamart".equals(row.get("merchant").asText())) {
+                org.junit.jupiter.api.Assertions.assertEquals(ids.categoryId, row.get("categoryId").asText());
+            }
+            if ("Unknown".equals(row.get("merchant").asText())) {
+                org.junit.jupiter.api.Assertions.assertTrue(row.get("categoryId").isNull());
+            }
+        }
     }
 
     @Test
     void manualTransactionCreationAutoCategorizesMatchingRows() throws Exception {
-        TestIds ids = setupUserAccountAndCategory("rmanual@a.com", "FoodManual");
+        TestIds ids = setupUserAccountAndCategory(uniqueEmail("rmanual"), "FoodManual");
         createRule(ids.userId, ids.categoryId, 10, "swiggy");
 
         mockMvc.perform(post("/api/users/{userId}/transactions", ids.userId)
@@ -107,7 +116,7 @@ class CategoryRuleIntegrationTest {
 
     @Test
     void csvCategoryNameWinsOverRules() throws Exception {
-        TestIds ids = setupUserAccountAndCategory("rcatwins@a.com", "FoodWin");
+        TestIds ids = setupUserAccountAndCategory(uniqueEmail("rcatwins"), "FoodWin");
         String groceriesId = createCategory(ids.userId, "GroceriesWin");
         createRule(ids.userId, groceriesId, 10, "swiggy");
 
@@ -122,7 +131,7 @@ class CategoryRuleIntegrationTest {
         String transactions = mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        JsonNode rows = objectMapper.readTree(transactions);
+        JsonNode rows = objectMapper.readTree(transactions).get("items");
         for (JsonNode row : rows) {
             if ("Swiggy Instamart".equals(row.get("merchant").asText())) {
                 org.junit.jupiter.api.Assertions.assertEquals(ids.categoryId, row.get("categoryId").asText());
@@ -135,8 +144,8 @@ class CategoryRuleIntegrationTest {
 
     @Test
     void ruleCannotUseAnotherUsersCategory() throws Exception {
-        TestIds a = setupUserAccountAndCategory("ra@a.com", "FoodA");
-        TestIds b = setupUserAccountAndCategory("rb@a.com", "FoodB");
+        TestIds a = setupUserAccountAndCategory(uniqueEmail("ra"), "FoodA");
+        TestIds b = setupUserAccountAndCategory(uniqueEmail("rb"), "FoodB");
 
         mockMvc.perform(post("/api/users/{userId}/category-rules", a.userId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -175,6 +184,10 @@ class CategoryRuleIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{" + categoryPart + "\"accountId\":\"" + accountId + "\",\"transactionDate\":\"2026-05-01\",\"amount\":100,\"direction\":\"DEBIT\",\"transactionType\":\"EXPENSE\",\"source\":\"MANUAL\",\"merchant\":\"" + merchant + "\",\"rawDescription\":\"desc\"}"))
                 .andExpect(status().isOk());
+    }
+
+    private String uniqueEmail(String prefix) {
+        return prefix + "-" + UUID.randomUUID() + "@example.com";
     }
 
     private record TestIds(String userId, String accountId, String categoryId) {}
