@@ -16,7 +16,7 @@ public class Budget extends BaseEntity {
     private UUID categoryId;
     @Column(nullable = false)
     private String name;
-    @Column(nullable = false, length = 7)
+    @Column(name = "budget_month", nullable = false, length = 7)
     private String month;
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
