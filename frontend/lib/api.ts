@@ -17,6 +17,10 @@ export type CategoryRule = { id:string; userId:string; name:string; priority:num
 export type CreateCategoryRuleRequest = { name:string; priority?:number; ruleField:string; matchOperator:string; matchValue:string; categoryId:string; transactionType?:string|null; direction?:string|null; active?:boolean };
 export type ApplyCategoryRulesResponse = { matchedCount:number; updatedCount:number; skippedCount:number };
 
+export type RecurringTransaction = { id:string;userId:string;accountId:string|null;categoryId:string|null;name:string;amount:number;direction:string;transactionType:string;frequency:string;dayOfMonth:number|null;startDate:string;endDate:string|null;active:boolean;notes:string|null };
+export type CreateRecurringTransactionRequest = { accountId?:string|null;categoryId?:string|null;name:string;amount:number;direction:string;transactionType:string;frequency:string;dayOfMonth?:number|null;startDate:string;endDate?:string|null;active?:boolean;notes?:string|null };
+export type MonthlyPlanningSummary = { userId:string;month:string;plannedIncome:number;actualIncome:number;incomeVariance:number;plannedExpenses:number;actualExpenses:number;expensesVariance:number;plannedInvestments:number;actualInvestments:number;investmentsVariance:number;plannedLiabilityPayments:number;actualLiabilityPayments:number;liabilityPaymentsVariance:number;plannedNetCashFlow:number;actualNetCashFlow:number;netCashFlowVariance:number };
+
 export const createUser = (payload: CreateUserRequest) => request<User>('/api/users', { method: 'POST', body: JSON.stringify(payload) }); export const getUsers = () => request<User[]>('/api/users'); export const createAccount = (userId: string, payload: CreateAccountRequest) => request<Account>(`/api/users/${userId}/accounts`, { method: 'POST', body: JSON.stringify(payload) });
 export const getSystemCategories = ()=>request<Category[]>('/api/categories/system');
 export const getUserCategories = (userId:string)=>request<Category[]>(`/api/users/${userId}/categories`);
@@ -38,3 +42,8 @@ export const createCategoryRule = (userId:string,payload:CreateCategoryRuleReque
 export const updateCategoryRule = (ruleId:string,payload:CreateCategoryRuleRequest)=>request<CategoryRule>(`/api/category-rules/${ruleId}`,{method:'PATCH',body:JSON.stringify(payload)});
 export const deactivateCategoryRule = (ruleId:string)=>request<void>(`/api/category-rules/${ruleId}/deactivate`,{method:'PATCH'});
 export const applyCategoryRules = (userId:string, params:{from?:string;to?:string;onlyUncategorized?:boolean})=>{ const p=new URLSearchParams(); if(params.from) p.set('from',params.from); if(params.to) p.set('to',params.to); p.set('onlyUncategorized', String(params.onlyUncategorized ?? true)); return request<ApplyCategoryRulesResponse>(`/api/users/${userId}/category-rules/apply?${p}`,{method:'POST'}); };
+
+export const getRecurringTransactions = (userId:string)=>request<RecurringTransaction[]>(`/api/users/${userId}/recurring-transactions`);
+export const createRecurringTransaction = (userId:string,payload:CreateRecurringTransactionRequest)=>request<RecurringTransaction>(`/api/users/${userId}/recurring-transactions`,{method:'POST',body:JSON.stringify(payload)});
+export const deactivateRecurringTransaction = (id:string)=>request<RecurringTransaction>(`/api/recurring-transactions/${id}/deactivate`,{method:'PATCH'});
+export const getMonthlyPlanningSummary = (userId:string,month:string)=>request<MonthlyPlanningSummary>(`/api/users/${userId}/planning/monthly-summary?month=${month}`);
