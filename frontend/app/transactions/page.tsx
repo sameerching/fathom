@@ -26,11 +26,12 @@ export default function TransactionsPage(){
   const [editForm,setEditForm]=useState<any>(null);
   const allCategories=useMemo(()=>[...systemCategories,...userCategories],[systemCategories,userCategories]);
 
-  const load=async(pageOverride?:number,sizeOverride?:string)=>{
+  const load=async(pageOverride?:number,sizeOverride?:string,filtersOverride?:typeof initialFilters)=>{
     if(!userId)return;
     const effectivePage = pageOverride ?? page;
     const effectiveSize = sizeOverride ?? size;
-    try{setError(''); const res=await getTransactions(userId,{...filters,page:String(effectivePage),size:effectiveSize}); setRows(res.items); setTotalPages(res.totalPages);}catch(e){setError((e as Error).message);}  
+    const effectiveFilters = filtersOverride ?? filters;
+    try{setError(''); const res=await getTransactions(userId,{...effectiveFilters,page:String(effectivePage),size:effectiveSize}); setRows(res.items); setTotalPages(res.totalPages);}catch(e){setError((e as Error).message);}  
   };
 
   useEffect(()=>{if(!userId)return; getSystemCategories().then(setSystemCategories).catch(e=>setError((e as Error).message)); getUserCategories(userId).then(setUserCategories).catch(e=>setError((e as Error).message));},[userId]);
@@ -46,7 +47,7 @@ export default function TransactionsPage(){
     <FormField label='Merchant'><input value={filters.merchant} onChange={e=>setFilters({...filters,merchant:e.target.value})}/></FormField>
   </div><div className='row'>
     <button onClick={async()=>{setPage(0); await load(0,size);}}>Apply filters</button>
-    <button type='button' className='secondary' onClick={async()=>{setFilters(initialFilters); setPage(0); await load(0,size);}}>Clear filters</button>
+    <button type='button' className='secondary' onClick={async()=>{setFilters(initialFilters); setPage(0); await load(0,size,initialFilters);}}>Clear filters</button>
     <select value={size} onChange={async e=>{const next=e.target.value; setSize(next); setPage(0); await load(0,next);}}><option>25</option><option>50</option><option>100</option></select>
     <button onClick={()=>setPage(Math.max(0,page-1))} disabled={page===0}>Previous</button>
     <button onClick={()=>setPage(page+1<totalPages?page+1:page)} disabled={page+1>=totalPages}>Next</button>
