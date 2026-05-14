@@ -1,0 +1,1 @@
+export default function StatusBadge({status}:{status:string}){const s=status.toUpperCase();const cls=s.includes('OVER')||s.includes('FAILED')?'danger':s.includes('UNDER')||s.includes('ACTIVE')||s.includes('COMPLETED')?'success':'warning';return <span className={`badge ${cls}`}>{s}</span>}
