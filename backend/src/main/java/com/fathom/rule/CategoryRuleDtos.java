@@ -20,7 +20,7 @@ public class CategoryRuleDtos {
 
     public record RuleResponse(UUID id, UUID userId, String name, int priority, RuleField ruleField, MatchOperator matchOperator,
                                String matchValue, UUID categoryId, TransactionType transactionType, Direction direction,
-                               boolean active, java.time.LocalDateTime createdAt, java.time.LocalDateTime updatedAt) {}
+                               boolean active, java.time.Instant createdAt, java.time.Instant updatedAt) {}
 
     public record ApplyRulesResponse(int matchedCount, int updatedCount, int skippedCount) {}
 }

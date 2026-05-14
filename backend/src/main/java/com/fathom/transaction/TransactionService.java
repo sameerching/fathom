@@ -42,9 +42,9 @@ public class TransactionService {
 
         Transaction t = new Transaction();
         t.setUserId(userId); t.setAccountId(r.accountId()); t.setCategoryId(r.categoryId()); t.setTransactionDate(r.transactionDate());
-        if (t.getCategoryId() == null) categoryRuleService.matchCategoryId(userId, t).ifPresent(t::setCategoryId);
         t.setAmount(r.amount()); t.setDirection(r.direction()); t.setTransactionType(r.transactionType()); t.setSource(r.source());
         t.setRawDescription(r.rawDescription()); t.setMerchant(r.merchant()); t.setNotes(r.notes());
+        if (t.getCategoryId() == null) categoryRuleService.matchCategoryId(userId, t).ifPresent(t::setCategoryId);
         t.setInternalTransfer(Boolean.TRUE.equals(r.internalTransfer())); t.setInvestmentTransfer(Boolean.TRUE.equals(r.investmentTransfer())); t.setDebtPayment(Boolean.TRUE.equals(r.debtPayment()));
         t.setLinkedTransactionId(r.linkedTransactionId()); t.setImportHash(r.importHash());
         return toResponse(repository.save(t));
