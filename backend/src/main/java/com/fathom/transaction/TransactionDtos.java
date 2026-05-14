@@ -26,9 +26,26 @@ public class TransactionDtos {
             String importHash
     ) {}
 
-    public record UpdateTransactionCategoryRequest(
-            UUID categoryId
+    public record UpdateTransactionCategoryRequest(UUID categoryId) {}
+
+    public record UpdateTransactionRequest(
+            @NotNull LocalDate transactionDate,
+            @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal amount,
+            @NotNull Direction direction,
+            @NotNull TransactionType transactionType,
+            @NotNull TransactionSource source,
+            String rawDescription,
+            String merchant,
+            String notes,
+            UUID categoryId,
+            Boolean internalTransfer,
+            Boolean investmentTransfer,
+            Boolean debtPayment
     ) {}
+
+    public record BulkCategoryUpdateRequest(java.util.List<UUID> transactionIds, UUID categoryId) {}
+    public record BulkCategoryUpdateResponse(int requestedCount, int updatedCount) {}
+    public record PaginatedTransactionsResponse(java.util.List<TransactionResponse> items, int page, int size, long totalItems, int totalPages) {}
 
     public record TransactionResponse(
             UUID id,

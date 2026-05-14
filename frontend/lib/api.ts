@@ -8,8 +8,9 @@ export type CreateCategoryRequest = { name:string; categoryType:string; parentCa
 export type MonthlySummary = { income:number;expenses:number;investments:number;liabilityPayments:number;netCashFlow:number;savingsRate:number };
 export type CategoryBreakdownItem = { categoryName:string;amount:number;transactionCount:number };
 export type NetWorthSummary = { totalAssets:number;totalLiabilities:number;netWorth:number };
-export type Transaction = { id:string;transactionDate:string;direction:string;amount:number;transactionType:string;merchant:string|null;rawDescription:string|null;accountId:string;categoryId:string|null };
-export type ImportSummary = { status:string;totalRows:number;createdCount:number;skippedDuplicateCount:number;failedCount:number;errors:{rowNumber:number;message:string}[] };
+export type Transaction = { id:string;userId?:string;transactionDate:string;direction:string;amount:number;transactionType:string;source?:string;merchant:string|null;rawDescription:string|null;notes?:string|null;accountId:string;categoryId:string|null;internalTransfer?:boolean;investmentTransfer?:boolean;debtPayment?:boolean };
+export type PaginatedTransactions = {items:Transaction[];page:number;size:number;totalItems:number;totalPages:number};
+export type ImportSummary = { importId?:string;source?:string;originalFilename?:string;status:string;totalRows:number;createdCount:number;skippedDuplicateCount:number;failedCount:number;createdAt?:string;errors:{rowNumber:number;message:string}[] };
 export type Account = { id:string;name:string;accountType:string;institutionName?:string;currency?:string;maskedIdentifier?:string };
 export type InvestmentHolding = { id:string;assetType:string;name:string;provider:string|null;symbol:string|null;currency:string|null;investedAmount:number|null;currentValue:number|null;asOfDate:string|null };
 export type Liability = { id:string;liabilityType:string;name:string;lender:string|null;currency:string|null;principalAmount:number|null;outstandingAmount:number;interestRate:number|null;emiAmount:number|null;startDate:string|null;endDate:string|null };
@@ -29,7 +30,7 @@ export const updateTransactionCategory = (transactionId:string,categoryId:string
 export const getMonthlySummary = (userId:string, month:string)=>request<MonthlySummary>(`/api/users/${userId}/dashboard/monthly-summary?month=${month}`);
 export const getCategoryBreakdown = (userId:string,from:string,to:string,type:string)=>request<CategoryBreakdownItem[]>(`/api/users/${userId}/dashboard/category-breakdown?${new URLSearchParams({from,to,type})}`);
 export const getNetWorth = (userId:string)=>request<NetWorthSummary>(`/api/users/${userId}/dashboard/net-worth`);
-export const getTransactions = (userId:string, filters:Record<string,string>)=>{ const p=new URLSearchParams(); Object.entries(filters).forEach(([k,v])=>v&&p.set(k,v)); return request<Transaction[]>(`/api/users/${userId}/transactions?${p}`); };
+export const getTransactions = (userId:string, filters:Record<string,string>)=>{ const p=new URLSearchParams(); Object.entries(filters).forEach(([k,v])=>v&&p.set(k,v)); return request<PaginatedTransactions>(`/api/users/${userId}/transactions?${p}`); };
 export const uploadTransactionsCsv = async (userId:string,accountId:string,file:File,source:string)=>{ const fd=new FormData(); fd.append('file',file); return request<ImportSummary>(`/api/users/${userId}/accounts/${accountId}/transaction-imports?source=${source}`,{method:'POST',body:fd}); };
 export const getUserAccounts = (userId:string)=>request<Account[]>(`/api/users/${userId}/accounts`);
 export const getInvestmentHoldings = (userId:string)=>request<InvestmentHolding[]>(`/api/users/${userId}/investment-holdings`);
@@ -47,3 +48,19 @@ export const getRecurringTransactions = (userId:string)=>request<RecurringTransa
 export const createRecurringTransaction = (userId:string,payload:CreateRecurringTransactionRequest)=>request<RecurringTransaction>(`/api/users/${userId}/recurring-transactions`,{method:'POST',body:JSON.stringify(payload)});
 export const deactivateRecurringTransaction = (id:string)=>request<RecurringTransaction>(`/api/recurring-transactions/${id}/deactivate`,{method:'PATCH'});
 export const getMonthlyPlanningSummary = (userId:string,month:string)=>request<MonthlyPlanningSummary>(`/api/users/${userId}/planning/monthly-summary?month=${month}`);
+
+export type Budget = {id:string;userId:string;categoryId:string|null;name:string;month:string;amount:number;active:boolean;notes:string|null;createdAt:string;updatedAt:string};
+export type CreateBudgetRequest = {name:string;month:string;categoryId?:string|null;amount:number;active?:boolean;notes?:string};
+export type BudgetSummaryItem = {budgetId:string;name:string;month:string;categoryId:string|null;categoryName:string|null;budgetAmount:number;actualAmount:number;remainingAmount:number;usagePercent:number;status:string};
+export type TransactionImportListItem = {importId:string;source:string;originalFilename:string;status:string;totalRows:number;createdCount:number;skippedDuplicateCount:number;failedCount:number;createdAt:string;errors:{rowNumber:number;message:string}[]};
+
+export const updateTransaction = (transactionId:string,payload:Record<string,unknown>)=>request<Transaction>(`/api/transactions/${transactionId}`,{method:'PATCH',body:JSON.stringify(payload)});
+export const deleteTransaction = (transactionId:string)=>request<void>(`/api/transactions/${transactionId}`,{method:'DELETE'});
+export const bulkUpdateTransactionCategory=(userId:string,transactionIds:string[],categoryId:string|null)=>request<{requestedCount:number;updatedCount:number}>(`/api/users/${userId}/transactions/bulk-category`,{method:'PATCH',body:JSON.stringify({transactionIds,categoryId})});
+export const getBudgets=(userId:string,month?:string)=>request<Budget[]>(`/api/users/${userId}/budgets${month ? `?month=${month}` : ''}`);
+export const createBudget=(userId:string,payload:CreateBudgetRequest)=>request<Budget>(`/api/users/${userId}/budgets`,{method:'POST',body:JSON.stringify(payload)});
+export const updateBudget=(id:string,payload:CreateBudgetRequest)=>request<Budget>(`/api/budgets/${id}`,{method:'PATCH',body:JSON.stringify(payload)});
+export const deactivateBudget=(id:string)=>request<Budget>(`/api/budgets/${id}/deactivate`,{method:'PATCH'});
+export const getBudgetSummary=(userId:string,month:string)=>request<BudgetSummaryItem[]>(`/api/users/${userId}/budget-summary?month=${month}`);
+export const getTransactionImports=(userId:string)=>request<TransactionImportListItem[]>(`/api/users/${userId}/transaction-imports`);
+export const getTransactionImport=(id:string)=>request<TransactionImportListItem>(`/api/transaction-imports/${id}`);
