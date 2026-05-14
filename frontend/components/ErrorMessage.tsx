@@ -1,4 +1,1 @@
-export default function ErrorMessage({ message }: { message: string }) {
-  if (!message) return null;
-  return <p className="warn">{message}</p>;
-}
+export default function ErrorMessage({ message }: { message?: string }) { if(!message) return null; return <div className='panel' style={{borderColor:'rgba(255,109,140,.5)'}}><strong className='warn'>⚠ {message}</strong></div>; }
