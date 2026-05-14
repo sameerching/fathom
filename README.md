@@ -169,3 +169,9 @@ curl -X POST http://localhost:8080/api/users/{userId}/accounts \
 - Create rules in `/rules` (merchant/raw description + operator + priority).
 - Upload CSV in `/upload`; rows without resolvable categoryName are auto-categorized by rules.
 - Apply rules to existing transactions from `/rules` with optional date range and uncategorized-only mode.
+
+
+## Phase 10: Recurring Transactions & Monthly Planning
+- Create recurring salary/SIP/EMI templates.
+- Open `/planning` to manage templates and load monthly planning summary.
+- Compare planned vs actual income, expenses, investments, liabilities, and net cash flow.
