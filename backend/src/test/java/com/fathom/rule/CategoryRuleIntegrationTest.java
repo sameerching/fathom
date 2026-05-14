@@ -33,9 +33,18 @@ class CategoryRuleIntegrationTest {
                 .andExpect(jsonPath("$.updatedCount").value(1))
                 .andExpect(jsonPath("$.skippedCount").value(0));
 
-        mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
+        String transactions = mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].categoryId").value(ids.categoryId));
+                .andReturn().getResponse().getContentAsString();
+        JsonNode rows = objectMapper.readTree(transactions);
+        for (JsonNode row : rows) {
+            if ("Swiggy Instamart".equals(row.get("merchant").asText())) {
+                org.junit.jupiter.api.Assertions.assertEquals(ids.categoryId, row.get("categoryId").asText());
+            }
+            if ("No Match".equals(row.get("merchant").asText())) {
+                org.junit.jupiter.api.Assertions.assertTrue(row.get("categoryId").isNull());
+            }
+        }
     }
 
     @Test
@@ -50,9 +59,18 @@ class CategoryRuleIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.updatedCount").value(1));
 
-        mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
+        String transactions = mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].categoryId").value(ids.categoryId));
+                .andReturn().getResponse().getContentAsString();
+        JsonNode rows = objectMapper.readTree(transactions);
+        for (JsonNode row : rows) {
+            if ("Swiggy Instamart".equals(row.get("merchant").asText())) {
+                org.junit.jupiter.api.Assertions.assertEquals(ids.categoryId, row.get("categoryId").asText());
+            }
+            if ("No Match".equals(row.get("merchant").asText())) {
+                org.junit.jupiter.api.Assertions.assertTrue(row.get("categoryId").isNull());
+            }
+        }
     }
 
     @Test
@@ -101,9 +119,18 @@ class CategoryRuleIntegrationTest {
                         .param("source", "MANUAL"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
+        String transactions = mockMvc.perform(get("/api/users/{userId}/transactions", ids.userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].categoryId").value(ids.categoryId));
+                .andReturn().getResponse().getContentAsString();
+        JsonNode rows = objectMapper.readTree(transactions);
+        for (JsonNode row : rows) {
+            if ("Swiggy Instamart".equals(row.get("merchant").asText())) {
+                org.junit.jupiter.api.Assertions.assertEquals(ids.categoryId, row.get("categoryId").asText());
+            }
+            if ("No Match".equals(row.get("merchant").asText())) {
+                org.junit.jupiter.api.Assertions.assertTrue(row.get("categoryId").isNull());
+            }
+        }
     }
 
     @Test
