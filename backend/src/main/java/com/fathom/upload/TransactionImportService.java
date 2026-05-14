@@ -5,6 +5,7 @@ import com.fathom.account.FinancialAccountService;
 import com.fathom.category.Category;
 import com.fathom.category.CategoryRepository;
 import com.fathom.common.ResourceNotFoundException;
+import com.fathom.rule.CategoryRuleService;
 import com.fathom.transaction.*;
 import com.fathom.user.UserService;
 import java.math.BigDecimal;
@@ -22,9 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class TransactionImportService {
     private final UserService userService; private final FinancialAccountService accountService; private final TransactionImportRepository importRepository;
-    private final TransactionImportErrorRepository errorRepository; private final TransactionRepository transactionRepository; private final CategoryRepository categoryRepository; private final TransactionCsvParser parser;
+    private final TransactionImportErrorRepository errorRepository; private final TransactionRepository transactionRepository; private final CategoryRepository categoryRepository; private final TransactionCsvParser parser; private final CategoryRuleService categoryRuleService;
     @Value("${fathom.import.max-file-size-bytes:5242880}") private long maxFileSize;
-    public TransactionImportService(UserService userService, FinancialAccountService accountService, TransactionImportRepository importRepository, TransactionImportErrorRepository errorRepository, TransactionRepository transactionRepository, CategoryRepository categoryRepository, TransactionCsvParser parser){this.userService=userService;this.accountService=accountService;this.importRepository=importRepository;this.errorRepository=errorRepository;this.transactionRepository=transactionRepository;this.categoryRepository=categoryRepository;this.parser=parser;}
+    public TransactionImportService(UserService userService, FinancialAccountService accountService, TransactionImportRepository importRepository, TransactionImportErrorRepository errorRepository, TransactionRepository transactionRepository, CategoryRepository categoryRepository, TransactionCsvParser parser, CategoryRuleService categoryRuleService){this.userService=userService;this.accountService=accountService;this.importRepository=importRepository;this.errorRepository=errorRepository;this.transactionRepository=transactionRepository;this.categoryRepository=categoryRepository;this.parser=parser;this.categoryRuleService=categoryRuleService;}
 
     @Transactional
     public TransactionImportDtos.ImportSummaryResponse importCsv(UUID userId, UUID accountId, MultipartFile file, TransactionSource source){
@@ -44,7 +45,10 @@ public class TransactionImportService {
                 String hash = hash(userId+"|"+accountId+"|"+date+"|"+direction+"|"+amount+"|"+normalize(raw));
                 if(transactionRepository.existsByUserIdAndImportHash(userId, hash)){dup++; continue;}
                 Transaction t = new Transaction(); t.setUserId(userId); t.setAccountId(accountId); t.setTransactionDate(date); t.setDirection(direction); t.setAmount(amount); t.setTransactionType(type); t.setSource(source); t.setRawDescription(raw);
-                t.setMerchant(optional(r, "merchant")); t.setNotes(optional(r, "notes")); t.setCategoryId(resolveCategoryId(userId, optional(r, "categoryName"))); t.setImportHash(hash);
+                t.setMerchant(optional(r, "merchant")); t.setNotes(optional(r, "notes"));
+                UUID categoryId = resolveCategoryId(userId, optional(r, "categoryName"));
+                if (categoryId == null) categoryId = categoryRuleService.matchCategoryId(userId, t).orElse(null);
+                t.setCategoryId(categoryId); t.setImportHash(hash);
                 transactionRepository.save(t); created++;
             } catch(Exception ex){
                 failed++; TransactionImportError e = new TransactionImportError(); e.setImportId(imp.getId()); e.setRowNumber((int)r.getRecordNumber()+1); e.setMessage(ex.getMessage()==null?"Invalid row":ex.getMessage()); e.setRawRow(r.toString()); errors.add(e);

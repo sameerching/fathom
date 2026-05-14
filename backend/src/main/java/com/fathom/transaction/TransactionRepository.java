@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID>, JpaSpecificationExecutor<Transaction> {
     boolean existsByUserIdAndImportHash(UUID userId, String importHash);
+    java.util.List<Transaction> findByUserId(UUID userId);
 }
