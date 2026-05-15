@@ -2,7 +2,60 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
-const groups=[{title:'Cockpit',items:[['◉','Dashboard','/dashboard'],['◌','Planning','/planning'],['◍','Budgets','/budgets']]},{title:'Money Flow',items:[['◈','Transactions','/transactions'],['◎','Categories','/categories'],['◇','Rules','/rules'],['⬆','Upload','/upload'],['☰','Imports','/imports']]},{title:'Balance Sheet',items:[['↗','Investments','/investments'],['↘','Liabilities','/liabilities']]},{title:'Getting Started',items:[['⚙','Setup','/setup']]}];
-export default function AppShell({ children }: { children: ReactNode }) { const pathname=usePathname();
-return <main className='container app-shell'><aside className='sidebar'><div style={{marginBottom:'1rem'}}><h2 style={{margin:0}}>FA</h2><div style={{fontSize:'1.25rem',fontWeight:800}}>Fathom</div><div className='subtle-text'>Personal Finance Cockpit</div></div>{groups.map(g=><div key={g.title} className='nav-group'><div className='subtle-text' style={{fontSize:12,textTransform:'uppercase',margin:'8px 0'}}>{g.title}</div><nav className='top-nav'>{g.items.map(([i,l,h])=><Link key={String(h)} href={String(h)} className={`nav-link ${pathname===h?'active-nav':''}`}>{i} {l}</Link>)}</nav></div>)}<div className='surface-card' style={{marginTop:'auto'}}><div className='pill'>Local mode</div><div className='subtle-text' style={{marginTop:6}}>No bank integrations. Safe MVP sandbox.</div></div></aside><section className='main-content'><div className='shell-top'><div><strong>{pathname.replace('/','')||'dashboard'}</strong></div><div className='search-ghost'>Search transactions, categories...</div><span className='pill'>Local MVP</span></div>{children}</section></main>;
+
+const primaryNav = [
+  ['Dashboard', '/dashboard'],
+  ['Planning', '/planning'],
+  ['Transactions', '/transactions'],
+  ['Budgets', '/budgets'],
+  ['Upload', '/upload'],
+  ['More', '/categories']
+];
+
+const secondaryNav = [
+  ['Categories', '/categories'],
+  ['Rules', '/rules'],
+  ['Imports', '/imports'],
+  ['Investments', '/investments'],
+  ['Liabilities', '/liabilities'],
+  ['Setup', '/setup']
+];
+
+export default function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const active = (href: string) => pathname === href;
+
+  return (
+    <main className='app-shell-top'>
+      <header className='app-header glass-panel'>
+        <div className='brand-lockup'>
+          <div className='brand-mark'>F</div>
+          <div>
+            <div className='brand-title'>Fathom</div>
+            <div className='brand-subtitle'>Money OS</div>
+          </div>
+        </div>
+        <nav className='nav-tabs'>
+          {primaryNav.map(([label, href]) => (
+            <Link key={href} href={href} className={`nav-tab ${active(href) ? 'nav-tab-active' : ''}`}>
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <div className='row'>
+          <input aria-label='search' placeholder='Search transactions...' className='search-input' />
+          <span className='action-pill'>Local MVP</span>
+          <div className='profile-dot'>U</div>
+        </div>
+      </header>
+      <nav className='sub-nav'>
+        {secondaryNav.map(([label, href]) => (
+          <Link key={href} href={href} className={`nav-tab ${active(href) ? 'nav-tab-active' : ''}`}>
+            {label}
+          </Link>
+        ))}
+      </nav>
+      <section className='page-container'>{children}</section>
+    </main>
+  );
 }
